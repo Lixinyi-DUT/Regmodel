@@ -1,14 +1,12 @@
 ---
-title: "Regression Models Course Project"
+title: "Regression Models Course Project Report"
 author: "Xinyi Li"
-date: "2015/4/24"
+date: "2015/4/26"
 output: pdf_document
 ---
-This is a document on regression models course project.
+This is a document on regression models course project(<https://github.com/rdpeng/courses/tree/master/07_RegressionModels/project>), which will focus on the problem about the relationship between a set of variables and miles per gallon (MPG).
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
 summary(cars)
