@@ -1,21 +1,90 @@
 ---
 title: "Regression Models Course Project Report"
-author: "Xinyi Li"
-date: "2015/4/26"
-output: pdf_document
+fontsize: 10pt
+output:
+  pdf_document:
+    fig_width: 6
+    fig_height: 4.5
+    fig_caption: true
+ 
 ---
-This is a document on regression models course project(<https://github.com/rdpeng/courses/tree/master/07_RegressionModels/project>), which will focus on the problem about the relationship between a set of variables and miles per gallon (MPG).
+This is a report on regression models course project, which will focus on the problem about the relationship between a set of variables and miles per gallon (MPG).
+At the beginning, the model was made just concerning the transmission as the predictor and the miles/gallon as output(`mpg~am`), which has great uncertainty with large t-value and p-value, and the diagnostics perform as unconvincing regression as well.To improve our model, another one and two factors are taken into consideration respectively. only 1/4 mile time(`mpg~am+qsec`), or both weight and number of forward carburetors(`mpg~am+wt+carbs`), can make adjusted model more convincible and precise. Through the comparison of `anova`, we accept the latter one(`mpg~am+qsec`) as the final model.
+
+There are four coefficients in the model(including the intercept).
+```{r,echo=FALSE}
+fit2<-lm(mpg~am+wt+carb,data=mtcars)
+fit2$coefficients
+```
+These coefficients of factors show the relationship of factors between the output(`mpg`). With the same weight and number of carburetors, for one gallon fuel, a manual transmission car will last `r fit2$coefficients[2]` more miles distance than automatic transmission one. **So munal transmission performs better than automatic transmission for MPG, and the difference between them is `r fit2$coefficients[2]`.** Besides, heavier weight can reduce the MPG by `r -fit2$coefficients[3]` per 1000 pounds, and MPG will decrease by `r -fit2$coefficients[4]` when every single carburetor is added.
+
+During the improvement, both common sense and experimental results are referenced. The chosen factors are intuitively related to MPG. As the transmission is binary, the single variable regression model cannot interpret the relationship forcefully, but it generally shows that the manual one have advantage on MPG. Considering no evidence for interaction, we add variables gradually to three with the experiments proving its confident.Finally, we find the relationship between `mpg` and those factors: `wt`, `am`, and `carb`.
+
+Our steps of modelling can be found in the following description with some illustrative code and figures. Some analyses of data can also be found there. The experiments were done on Windows 8.1, with RStudio Version 0.99.332, and the report was written via knitr.
+
+Firstly, when we simply consider the transmission as the only predictor to model:
+```{r}
+fit_origin<-lm(mpg~am,data=mtcars)
+fit_origin$coefficients
+```
+It simply means mpg for automatic transmission will be `r (fit_origin)$coefficients[1]`, while that for manual transmission will be `r (fit_origin)$coefficients[1]+ (fit_origin)$coefficients[2]`.
+```{r}
+summary(fit_origin)$coefficients
+```
+When looking at the coefficients, the problem appears. The intercept has a large t-value and the coefficient of `am` has a large  p-value.In other world, for the intercept, the with of confident interval width is `r summary(fit_origin)$coefficients[5][1]*2`,which is terrible for regression. Considering the uncertainty, we fail to accept the model,and other evidences(regression and diagnostic figure) shows the same conclusion as following:
 
 
+
+As the figures show, the model is not persuasive enough and other predictors should be taken into consideration. When choosing the second predictor, `qsec` can lead to relative lower t-value and p-value among all the factors except `am`,which does make sense in the real world.
 
 ```{r}
-summary(cars)
+fit1<-lm(mpg~am+qsec,data=mtcars)
+summary(fit1)$coefficients
 ```
 
-You can also embed plots, for example:
+If another two predictors included in the original model, `wt` and `carb` adjust the model better.
 
-```{r, echo=FALSE}
-plot(cars)
+```{r}
+fit2<-lm(mpg~am+wt+carb,data=mtcars)
+summary(fit2)$coefficients
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+And then variable selection can be made. Let's take a close look at `anova`.
+
+```{r}
+anova(fit_origin,fit1)
+anova(fit_origin,fit2)
+```
+
+The p-value is small, so both of them are acceptable. But the latter is more reasonable and has better robustness. Thus, finally, `fit2` is chosen.
+
+**Appendix**
+
+```{r,echo=FALSE,fig.cap="The regression of single factor `am`(`fit_origin`)",fig.width=4,fig.height=3}
+plot(mtcars$am,mtcars$mpg,col="blue",asp=0.05)
+lines(mtcars$am,fit_origin$fitted,lwd=2,col="red")
+```
+
+```{r,echo=FALSE,fig.width=4,fig.height=3,fig.cap="The relationship between `mpg` and `qsec` influenced by transimission"}
+d<-mtcars[mtcars$am==1,]
+e<-mtcars[mtcars$am==0,]
+plot(d$qsec,d$mpg)
+par(new=TRUE)
+plot(e$qsec,e$mpg,col="red",axes = FALSE,xlab = "", ylab = "")
+fit=lm(mpg~qsec,data=mtcars)
+lines(mtcars$qsec,fit$fitted,lwd=2,col="blue")
+legend("bottomright",c("automatic","manual"),pch=c(1,1),col=c("black","red"),cex=.8)
+par(new=FALSE)
+```
+
+```{r,echo=FALSE,fig.cap="Diagnostics of `fit_origin`",fig.width=9,fig.height=8}
+par(mfrow=c(2,2))
+plot(fit_origin)
+par(mfrow=c(1,1))
+```
+
+```{r,echo=FALSE,fig.cap="Diagnostics of `fit2`",fig.width=9,fig.height=8}
+par(mfrow=c(2,2))
+plot(fit2)
+par(mfrow=c(1,1))
+```
